@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: GPL-3.0-only
+#
+name: VcPkg NuGet Cache
+description: Cache VcPkg dependencies as NuGet packages
+author: LegalizeAdulthood
+inputs:
+  feed-url:
+    description: NuGet feed URL
+    required: false
+    default: https://nuget.pkg.github.com/${{github.repository_owner}}/index.json
+  user-name:
+    description: NuGet user name
+    required: false
+    default: ${{github.repository_owner}}
+  vcpkg:
+    description: Path to vcpkg
+    required: false
+    default: ${{github.workspace}}/vcpkg
+  access-token:
+    description: GitHub access token
+    required: true
+
+outputs:
+  vcpkg-binary-sources:
+    description: VcPkg binary sources
+    value: clear;nuget,${{inputs.feed-url}},readwrite
+
+runs:
+  using: composite
+  steps:
+    - name: Bootstrap VcPkg (!Windows)
+      if: ${{runner.os != 'Windows'}}
+      shell: bash
+      run: |
+        ${{inputs.vcpkg}}/bootstrap-vcpkg.sh
+
+    - name: Install Mono (Linux)
+      if: ${{runner.os == 'Linux'}}
+      shell: bash
+      run: |
+        sudo apt install mono-complete
+
+    - name: Add NuGet sources (!Windows)
+      if: ${{runner.os != 'Windows'}}
+      shell: bash
+      run: |
+        mono `${{inputs.vcpkg}} fetch nuget | tail -1` \
+          sources add \
+          -Source "${{inputs.feed-url}}" \
+          -StorePasswordInClearText \
+          -Name GitHubPackages \
+          -UserName "${{inputs.user-name}}" \
+          -Password "${{inputs.access-token}}"
+        mono `${{inputs.vcpkg}} fetch nuget | tail -1` \
+          setapikey "${{inputs.access-token}}" \
+          -Source "${{inputs.feed-url}}"
+
+    - name: Add NuGet sources (Windows)
+      if: ${{runner.os == 'Windows'}}
+      shell: bash
+      run: |
+        nuget \
+          sources add \
+          -Source "${{inputs.feed-url}}" \
+          -StorePasswordInClearText \
+          -Name GitHubPackages \
+          -UserName "${{inputs.user-name}}" \
+          -Password "${{inputs.access-token}}"
+        nuget \
+          setapikey "${{inputs.access-token}}" \
+          -Source "${{inputs.feed-url}}"

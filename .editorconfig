@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: GPL-3.0-only
+#
+# http://editorconfig.org
+
+root = true
+
+[{*.{cpp,c,h,txt}}]
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.yml]
+insert_final_newline = true
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+
+[*.json]
+insert_final_newline = true
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
